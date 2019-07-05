@@ -1,5 +1,8 @@
 package com.spring.security.test.demo.service;
 
+import com.spring.security.test.demo.bean.ResourceModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -8,6 +11,7 @@ import org.springframework.util.AntPathMatcher;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 /**
  * @author hutianchen
@@ -15,6 +19,10 @@ import java.util.Set;
  */
 @Component("rbacauthorityservice")
 public class RbacAuthorityService {
+
+    @Autowired
+    ResourceService resourceService;
+
     public boolean hasPermission(HttpServletRequest request, Authentication authentication) {
 
         Object userInfo = authentication.getPrincipal();
@@ -25,17 +33,11 @@ public class RbacAuthorityService {
 
             String username = ((UserDetails) userInfo).getUsername();
             ((UserDetails) userInfo).getPassword();
-
-            //获取资源
-            Set<String> urls = new HashSet<>();
-            urls.add("/admin/**"); // 这些 url 都是要登录后才能访问，且其他的 url 都不能访问！
-            Set set2 = new HashSet();
-            Set set3 = new HashSet();
-
+            Integer rolecode = resourceService.queryRoleInfoByManger(username);
+            List<ResourceModel> resourceModels = resourceService.queryResource(rolecode);
             AntPathMatcher antPathMatcher = new AntPathMatcher();
-
-            for (String url : urls) {
-                if (antPathMatcher.match(url, request.getRequestURI())) {
+            for (ResourceModel model : resourceModels) {
+                if (antPathMatcher.match(model.getUri(), request.getRequestURI())) {
                     hasPermission = true;
                     break;
                 }
